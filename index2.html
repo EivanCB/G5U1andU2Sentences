@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Navigator Pro</title>
+    <style>
+        :root {
+            --google-blue: #4285F4;
+            --map-bg: #e5e3df;
+            --item-height: 200px;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            height: 100%; font-family: 'Arial', sans-serif;
+            background-color: var(--map-bg);
+            background-image: 
+                linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px);
+            background-size: 60px 60px;
+            overflow: hidden;
+        }
+
+        .container { display: flex; height: 100vh; width: 100vw; }
+
+        /* --- LEFT SIDE --- */
+        .left-side {
+            flex: 4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-right: 3px solid #ccc;
+            padding: 20px;
+        }
+
+        .machine-casing {
+            background: white;
+            padding: 35px 20px;
+            border-radius: 30px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 2px solid #ddd;
+        }
+
+        .slot-window {
+            width: 190px;
+            height: var(--item-height);
+            background: #fff;
+            border: 3px solid #eee;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slot-column {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            text-align: center;
+        }
+
+        .item {
+            height: var(--item-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #3c4043;
+            padding: 0 10px;
+            box-sizing: border-box;
+            word-break: keep-all;
+            font-size: 40px; 
+        }
+
+        .long-text { font-size: 28px !important; }
+
+        /* --- NEW RED BUTTON STYLE --- */
+        .button-container {
+            margin-top: 50px;
+            perspective: 500px;
+        }
+
+        .spin-button {
+            width: 120px;
+            height: 120px;
+            background-color: #ea4335;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 
+                0 10px #b21f1f, 
+                0 15px 25px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            text-transform: uppercase;
+            transition: all 0.1s ease;
+            outline: none;
+            user-select: none;
+        }
+
+        /* Press animation */
+        .spin-button:active, .pressing .spin-button {
+            transform: translateY(8px);
+            box-shadow: 
+                0 2px #b21f1f, 
+                0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        .spin-button::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 20%;
+            width: 30px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: rotate(-20deg);
+        }
+
+        /* --- RIGHT SIDE --- */
+        .right-side {
+            flex: 7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.3);
+        }
+
+        .reference-img {
+            max-width: 98%;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            background: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left-side">
+        <h1 style="color: var(--google-blue); margin-bottom: 30px; font-size: 2.2rem;">Map Spinner</h1>
+        
+        <div class="machine-casing">
+            <div class="slot-window"><div class="slot-column" id="slot1"></div></div>
+            <div class="slot-window"><div class="slot-column" id="slot2"></div></div>
+            <div class="slot-window"><div class="slot-column" id="slot3"></div></div>
+        </div>
+
+        <div class="button-container" id="spinArea">
+            <button class="spin-button" onclick="handleSpin()">SPIN</button>
+        </div>
+    </div>
+
+    <div class="right-side">
+        <img id="refImage" class="reference-img" src="https://drive.google.com/thumbnail?id=1Nz6r80S8IPZmPbx_72xkTTgPg7ScCUe9&sz=w1200" alt="Reference Card">
+    </div>
+</div>
+
+<script>
+    const list1 = ["I", "we", "they", "he", "she"];
+    const list2 = ["bakery", "bank", "bookstore", "hospital", "park", "post office", "restaurant", "supermarket"];
+    const list3 = ["bike", "bus", "car", "MRT", "plane", "scooter", "taxi", "train"];
+
+    function setupSlots(id, items) {
+        const el = document.getElementById(id);
+        const repeated = Array(25).fill(items).flat();
+        repeated.forEach(text => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            if (text.length > 8) div.classList.add('long-text');
+            div.textContent = text;
+            el.appendChild(div);
+        });
+    }
+
+    setupSlots('slot1', list1);
+    setupSlots('slot2', list2);
+    setupSlots('slot3', list3);
+
+    let isSpinning = false;
+
+    function handleSpin() {
+        if (isSpinning) return;
+        isSpinning = true;
+
+        // Visual Feedback for Button
+        const btnArea = document.getElementById('spinArea');
+        btnArea.classList.add('pressing');
+        setTimeout(() => btnArea.classList.remove('pressing'), 200);
+
+        [1, 2, 3].forEach((num, i) => {
+            const el = document.getElementById(`slot${num}`);
+            const data = i === 0 ? list1 : (i === 1 ? list2 : list3);
+            
+            const duration = 1.5 + (Math.random() * 1.5);
+            const randomIdx = Math.floor(Math.random() * data.length);
+            
+            const spinDistance = (data.length * 15 + randomIdx) * 200;
+            
+            el.style.transition = `transform ${duration}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            el.style.transform = `translateY(-${spinDistance}px)`;
+            
+            setTimeout(() => {
+                el.style.transition = 'none';
+                const resetPos = randomIdx * 200;
+                el.style.transform = `translateY(-${resetPos}px)`;
+                if(i === 2) isSpinning = false;
+            }, duration * 1000);
+        });
+    }
+</script>
+
+</body>
+</html>
